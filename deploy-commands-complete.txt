@@ -1,0 +1,316 @@
+ AWS
+
+- signup: aws.amazon.com/signup
+  - it will ask you to enter your debit/credit card
+  - aws will charge the card with Rs 2 only
+  - this charge will get reverted in the next month
+- signin with your account: aws.amazon.com
+- when you login with your account, please please please select the right region: Mumbai
+
+## EC2
+
+- elastic cloud compute
+- used to create virtual machine (ec2 instance)
+- to create ec2 instance
+  - click the launch instances button (you might see it in right top corner)
+  - configure following properties
+    - name: web-server
+    - AMI: Ubuntu server 22.04 LTS
+    - instance type: (combination of cpu and ram) t2.micro (1 cpu and 1GB of RAM)
+    - key pair: create new keypair
+      - name: web-server
+      - key file type: RSA
+      - file format: .pem
+      - create the keypair and it will download a file named web-server.pem
+      - please please please keep this file safe
+    - network settings
+      - allow http and https traffic for this instance (security group)
+
+### connecting to the ec2 instance
+
+- give right permissions to the pem file
+
+bash
+
+# set the r----- permissions to the pem file
+> cd ~/Downloads
+> sudo chmod 400 web-server.pem
+
+
+
+- connect to the ec2 instance using ssh command
+
+bash
+
+# grab the public ip address of your instance
+# connect to the ec2 instance
+> ssh -i ~/Downloads/web-server.pem ubuntu@<public address>
+
+
+
+## configure the instance as web server (apache)
+
+bash
+
+# update the apt cache
+# apt: package manager for ubuntu
+> sudo apt-get update
+
+# install apache2
+> sudo apt-get install apache2
+
+# enable the apache2 server
+> sudo systemctl enable apache2
+
+# start the apache2 server
+> sudo systemctl start apache2
+
+# verify if the apache is running
+> sudo systemctl status apache2
+
+# please put your public ip address of ec2 instance inside the browser to verify if the apache (web server) is running fine
+# if it works, you will see the apache default website
+
+
+
+### run a demo html page
+
+bash
+
+# go to the apache htdocs directory
+> cd /var/www/html
+
+# delete the existing index.html file
+> sudo rm index.html
+
+# create your own index file
+> sudo vim index.html
+
+# start the insert mode: esc + i
+# enter the following code
+
+
+html
+<html>
+  <body>
+    <h1>this is a demo server</h1>
+  </body>
+</html>
+
+
+bash
+
+# exit the insert mode: esc
+# save and exit: esc :wq
+
+# visit the public ip address of your instance and see if you can get the changes visible
+
+
+
+## install the database (mysql) on the server
+
+bash
+
+# update the apt-cache
+> sudo apt-get update
+
+# install mysql-server
+> sudo apt-get install mysql-server
+
+
+
+## deploy a react application on the web server (instance)
+
+bash
+
+# follow these instructions on your (local) machine
+# create a react application
+> npx create-react-app test-app
+> cd test-app
+> code .
+
+# add you code
+
+# build the react app
+> npm run build
+
+# you should see directory named build
+# go inside the build directory
+# select all files and archive them (zip/compress)
+# rename the zip file to website.zip
+
+# upload the website.zip to the web server
+# go to your react app build directory
+> cd <react-app>/build
+
+# this command will upload the website.zip file to the home directory of your instance
+> scp -i ~/Downloads/web-server.pem website.zip ubuntu@<public ip>:~/
+
+
+
+bash
+
+# execute the following commands on your instance
+> cd ~
+> ls
+# make sure that the website.zip is uploaded successfully
+
+# move the website.zip to the apache htdocs
+> sudo mv website.zip /var/www/html/
+
+# go the htdocs directory
+> cd /var/www/html
+
+# remove the older index.html file
+> sudo rm index.html
+
+# install the unzip command
+> sudo apt-get install unzip
+
+# unzip the website.zip file
+> sudo unzip website.zip
+
+# you are done :)
+# simply visit the public ip address in your browser to verify if you can see the react application
+
+
+
+## terminate the instance to save the bucks
+
+- go the management console
+- select the instance
+- right click and select Terminate instance
+
+**************************************************************************
+
+
+
+# give permission to ec2 to write
+sunbeam@sunbeam-Vivobook-ASUSLaptop-M6500QH-M6500QH:~/Downloads$ sudo chmod 700 backend-server.pem
+
+# connect to ec2
+sunbeam@sunbeam-Vivobook-ASUSLaptop-M6500QH-M6500QH:~/Downloads$ ssh -i ~/Downloads/backend-server.pem ubuntu@3.111.147.139
+
+
+# check is you are in folder where .zip file resides 
+sunbeam@sunbeam-Vivobook-ASUSLaptop-M6500QH-M6500QH:~/Downloads/build$ ls
+asset-manifest.json  index.html   manifest.json  static
+images               logo512.png  robots.txt     website.zip
+
+#upload .zip file to ec2 from your local m/c
+sunbeam@sunbeam-Vivobook-ASUSLaptop-M6500QH-M6500QH:~/Downloads/build$ scp -i ~/Downloads/backend-server.pem website.zip ubuntu@3.111.147.139:~/
+website.zip                                   100% 1574KB   6.7MB/s   00:00 
+
+# check is .zip in home dir of ec2
+ubuntu@ip-172-31-42-160:~$ ls
+website.zip
+
+# install unzip --> required in future
+ubuntu@ip-172-31-42-160:~$ sudo apt install unzip
+
+
+# front end also require apache2 so install it
+ubuntu@ip-172-31-42-160:~$ sudo apt-get update
+ubuntu@ip-172-31-42-160:~$ sudo apt-get install apache2
+
+
+# perform following steps
+ubuntu@ip-172-31-42-160:~$ sudo systemctl enable apache2
+==> Synchronizing state of apache2.service with SysV service script with /lib/systemd/systemd-sysv-install.
+==> Executing: /lib/systemd/systemd-sysv-install enable apache2
+ubuntu@ip-172-31-42-160:~$ sudo systemctl start apache2
+ubuntu@ip-172-31-42-160:~$ sudo systemctl status apache2		\\check is active
+==> ● apache2.service - The Apache HTTP Server
+     Loaded: loaded (/lib/systemd/system/apache2.service; enabled; vendor preset: enabled)
+     Active: active (running) since Tue 2023-03-07 13:56:36 UTC; 36s ago
+       Docs: https://httpd.apache.org/docs/2.4/
+   Main PID: 4438 (apache2)
+
+
+# go to folder   /var/www/html/   and check is empty
+ubuntu@ip-172-31-42-160:~$ cd /var/www/html/
+ubuntu@ip-172-31-42-160:/var/www/html$ ls
+index.html
+
+# ubuntu@ip-172-31-42-160:/var/www/html$ === this folder should be empty (remove index.html)
+ubuntu@ip-172-31-42-160:/var/www/html$ sudo rm -R index.html 
+
+ubuntu@ip-172-31-42-160:/var/www/html$ ls
+ubuntu@ip-172-31-42-160:/var/www/html$ cd ~
+ubuntu@ip-172-31-42-160:~$ ls
+website.zip
+
+# to extract .zip file (it will extract all files which were in build.zip)
+ubuntu@ip-172-31-42-160:~$ sudo unzip website.zip 
+
+
+# website.zip should be in home dir of ec2 and all extracted files should be in var/www/html/
+ubuntu@ip-172-31-42-160:~$ ls
+asset-manifest.json  images  index.html  logo512.png  manifest.json  robots.txt  static  website.zip
+ubuntu@ip-172-31-42-160:~$ sudo mv * /var/www/html/
+ubuntu@ip-172-31-42-160:~$ ls
+ubuntu@ip-172-31-42-160:~$ cd /var/www/html/
+ubuntu@ip-172-31-42-160:/var/www/html$ ls
+asset-manifest.json  images  index.html  logo512.png  manifest.json  robots.txt  static  website.zip
+ubuntu@ip-172-31-42-160:/var/www/html$ sudo mv website.zip ~/
+ubuntu@ip-172-31-42-160:/var/www/html$ ls
+asset-manifest.json  images  index.html  logo512.png  manifest.json  robots.txt  static
+ubuntu@ip-172-31-42-160:/var/www/html$ cd ~
+
+
+# check 
+ubuntu@ip-172-31-42-160:~$ ls
+website.zip
+
+# upload your .jar file to ec2 from your local m/c	(you should be in folder containing .jar file or you can provide absolute path of .jar file -- home/sunbeam/Downloads/arsV1-0.0.1-SNAPSHOT.jar)	
+sunbeam@sunbeam-Vivobook-ASUSLaptop-M6500QH-M6500QH:~/Downloads$ scp -i backend-server.pem arsV1-0.0.1-SNAPSHOT.jar ubuntu@3.111.147.139:~/
+
+==> arsV1-0.0.1-SNAPSHOT.jar                      100%   42MB  26.3MB/s   00:01 
+
+# check is .jar file added in ec2 home dir
+ubuntu@ip-172-31-42-160:~$ ls
+arsV1-0.0.1-SNAPSHOT.jar  website.zip
+
+# to check mysql
+ubuntu@ip-172-31-42-160:~$ sudo mysql
+
+# if not present install it 
+ubuntu@ip-172-31-42-160:~$ sudo apt-get update
+ubuntu@ip-172-31-42-160:~$ sudo apt-get install mysql-server
+
+#or you want to set password of root user use below command
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password';
+
+
+# to run .jar file
+ubuntu@ip-172-31-42-160:~$ java -jar arsV1-0.0.1-SNAPSHOT.jar 
+
+Command 'java' not found, but can be installed with:
+sudo apt install openjdk-11-jre-headless  # version 11.0.18+10-0ubuntu1~22.04, or
+sudo apt install default-jre              # version 2:1.11-72build2
+sudo apt install openjdk-17-jre-headless  # version 17.0.6+10-0ubuntu1~22.04
+sudo apt install openjdk-18-jre-headless  # version 18.0.2+9-2~22.04
+sudo apt install openjdk-19-jre-headless  # version 19.0.2+7-0ubuntu3~22.04
+sudo apt install openjdk-8-jre-headless   # version 8u362-ga-0ubuntu1~22.04
+ubuntu@ip-172-31-42-160:~$ ^C
+
+# to install jdk
+ubuntu@ip-172-31-42-160:~$ sudo apt install default-jre 
+
+
+# in home dir of ec2 there should be only website.zip(front end) and  arsV1-0.0.1-SNAPSHOT.jar(backend)
+ubuntu@ip-172-31-42-160:~$ ls
+arsV1-0.0.1-SNAPSHOT.jar  website.zip
+
+
+# tu run .jar app till terminal is open	(check if is there any exception while starting java app)
+ubuntu@ip-172-31-42-160:~$ java -jar arsV1-0.0.1-SNAPSHOT.jar
+
+# to run .jar app continuously
+ubuntu@ip-172-31-42-160:~$ nohup java -jar arsV1-0.0.1-SNAPSHOT.jar &
+
+# to close ec2
+ubuntu@ip-172-31-42-160:/var/www/html$ exit
+==> logout
+Connection to 3.111.147.139 closed.
+

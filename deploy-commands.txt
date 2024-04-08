@@ -1,0 +1,182 @@
+ AWS
+
+- signup: aws.amazon.com/signup
+  - it will ask you to enter your debit/credit card
+  - aws will charge the card with Rs 2 only
+  - this charge will get reverted in the next month
+- signin with your account: aws.amazon.com
+- when you login with your account, please please please select the right region: Mumbai
+
+## EC2
+
+- elastic cloud compute
+- used to create virtual machine (ec2 instance)
+- to create ec2 instance
+  - click the launch instances button (you might see it in right top corner)
+  - configure following properties
+    - name: web-server
+    - AMI: Ubuntu server 22.04 LTS
+    - instance type: (combination of cpu and ram) t2.micro (1 cpu and 1GB of RAM)
+    - key pair: create new keypair
+      - name: web-server
+      - key file type: RSA
+      - file format: .pem
+      - create the keypair and it will download a file named web-server.pem
+      - please please please keep this file safe
+    - network settings
+      - allow http and https traffic for this instance (security group)
+
+### connecting to the ec2 instance
+
+- give right permissions to the pem file
+
+bash
+
+# set the r----- permissions to the pem file
+> cd ~/Downloads
+> sudo chmod 400 web-server.pem
+
+
+
+- connect to the ec2 instance using ssh command
+
+bash
+
+# grab the public ip address of your instance
+# connect to the ec2 instance
+> ssh -i ~/Downloads/web-server.pem ubuntu@<public address>
+
+
+
+## configure the instance as web server (apache)
+
+bash
+
+# update the apt cache
+# apt: package manager for ubuntu
+> sudo apt-get update
+
+# install apache2
+> sudo apt-get install apache2
+
+# enable the apache2 server
+> sudo systemctl enable apache2
+
+# start the apache2 server
+> sudo systemctl start apache2
+
+# verify if the apache is running
+> sudo systemctl status apache2
+
+# please put your public ip address of ec2 instance inside the browser to verify if the apache (web server) is running fine
+# if it works, you will see the apache default website
+
+
+
+### run a demo html page
+
+bash
+
+# go to the apache htdocs directory
+> cd /var/www/html
+
+# delete the existing index.html file
+> sudo rm index.html
+
+# create your own index file
+> sudo vim index.html
+
+# start the insert mode: esc + i
+# enter the following code
+
+
+html
+<html>
+  <body>
+    <h1>this is a demo server</h1>
+  </body>
+</html>
+
+
+bash
+
+# exit the insert mode: esc
+# save and exit: esc :wq
+
+# visit the public ip address of your instance and see if you can get the changes visible
+
+
+
+## install the database (mysql) on the server
+
+bash
+
+# update the apt-cache
+> sudo apt-get update
+
+# install mysql-server
+> sudo apt-get install mysql-server
+
+
+
+## deploy a react application on the web server (instance)
+
+bash
+
+# follow these instructions on your (local) machine
+# create a react application
+> npx create-react-app test-app
+> cd test-app
+> code .
+
+# add you code
+
+# build the react app
+> npm run build
+
+# you should a directory named build
+# go inside the build directory
+# select all files and archive them (zip/compress)
+# rename the zip file to website.zip
+
+# upload the website.zip to the web server
+# go to your react app build directory
+> cd <react-app>/build
+
+# this command will upload the website.zip file to the home directory of your instance
+> scp -i ~/Downloads/web-server.pem website.zip ubuntu@<public ip>:~/
+
+
+
+bash
+
+# execute the following commands on your instance
+> cd ~
+> ls
+# make sure that the website.zip is uploaded successfully
+
+# move the website.zip to the apache htdocs
+> sudo mv website.zip /var/www/html/
+
+# go the htdocs directory
+> cd /var/www/html
+
+# remove the older index.html file
+> sudo rm index.html
+
+# install the unzip command
+> sudo apt-get install unzip
+
+# unzip the website.zip file
+> sudo unzip website.zip
+
+# you are done :)
+# simply visit the public ip address in your browser to verify if you can see the react application
+
+
+
+## terminate the instance to save the bucks
+
+- go the management console
+- select the instance
+- right click and select Terminate instance
